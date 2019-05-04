@@ -38,7 +38,6 @@
 
 namespace ORB_SLAM2
 {
-
 class Viewer;
 class FrameDrawer;
 class Map;
@@ -58,33 +57,15 @@ public:
 
 	struct Params
 	{
-		const std::string voc_file_path;
-		float fx = -1.0f;
-		float fy = -1.0f;
-		float cx = -1.0f;
-		float cy = -1.0f;
-		float k1 = 0.0f;
-		float k2 = 0.0f;
-		float p1 = 0.0f;
-		float p2 = 0.0f;
-		float bf = 0.0f; // focal length times base distance
-		float th_depth = 35.0f; //Close/Far threshold. Baseline times.
-		int32_t width = -1;
-		int32_t height = -1;
-		int32_t fps = 10;
-
-		//orb params
-		int32_t num_features = 2000;
-		float scale_factor = 1.2f;
-		float num_levels = 9;
-		float init_thrs_fast = 20.0f;
-		float min_thrs_fast = 7.0f;
+		std::string voc_file_path;
+		Tracking::Params tracking_params;
+		Viewer::Params viewer_params;
 	};
 
 public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-    System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true);
+    System(const Params & p, const eSensor sensor, const bool bUseViewer = true);
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
@@ -199,7 +180,12 @@ private:
     std::vector<MapPoint*> mTrackedMapPoints;
     std::vector<cv::KeyPoint> mTrackedKeyPointsUn;
     std::mutex mMutexState;
+
+	Params mParams;
 };
+
+void readParamsFromOCVYAML(const std::string& fname, System::Params& params);
+
 
 }// namespace ORB_SLAM
 

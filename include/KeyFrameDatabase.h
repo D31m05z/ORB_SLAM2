@@ -25,8 +25,6 @@
 #include <list>
 #include <set>
 
-#include "KeyFrame.h"
-#include "Frame.h"
 #include "ORBVocabulary.h"
 
 #include<mutex>

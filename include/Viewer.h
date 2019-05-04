@@ -25,7 +25,6 @@
 #include "FrameDrawer.h"
 #include "MapDrawer.h"
 #include "Tracking.h"
-#include "System.h"
 
 #include <mutex>
 
@@ -40,7 +39,20 @@ class System;
 class Viewer
 {
 public:
-    Viewer(System* pSystem, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Tracking *pTracking, const string &strSettingPath);
+
+	struct Params
+	{
+		float ViewpointX = 0;
+		float ViewpointY = -100.f;
+		float ViewpointZ = -0.1f;
+		float ViewpointF = 2000.f;
+		float fps = 10.0f;
+		int32_t width;
+		int32_t height;
+	};
+
+    Viewer(System* pSystem, FrameDrawer* pFrameDrawer, 
+		MapDrawer* pMapDrawer, Tracking *pTracking, const Params& p);
 
     // Main thread function. Draw points, keyframes, the current camera pose and the last processed
     // frame. Drawing is refreshed according to the camera fps. We use Pangolin.

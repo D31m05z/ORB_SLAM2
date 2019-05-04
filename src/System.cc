@@ -29,9 +29,13 @@
 namespace ORB_SLAM2
 {
 
-System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
-               const bool bUseViewer):mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
-        mbDeactivateLocalizationMode(false)
+System::System(const Params & params, const eSensor sensor,
+               const bool bUseViewer):
+	mParams(params),
+	mSensor(sensor),
+	mpViewer(static_cast<Viewer*>(NULL)),
+	mbReset(false),mbActivateLocalizationMode(false),
+    mbDeactivateLocalizationMode(false)
 {
     // Output welcome message
     cout << endl <<
@@ -49,25 +53,16 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     else if(mSensor==RGBD)
         cout << "RGB-D" << endl;
 
-    //Check settings file
-    cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
-    if(!fsSettings.isOpened())
-    {
-       cerr << "Failed to open settings file at: " << strSettingsFile << endl;
-       exit(-1);
-    }
-
-
     //Load ORB Vocabulary
     cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
 
     mpVocabulary = new ORBVocabulary();
-	bool bVocLoad = mpVocabulary->loadFromBinaryFile(strVocFile);
+	bool bVocLoad = mpVocabulary->loadFromBinaryFile(mParams.voc_file_path);
     //bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
     if(!bVocLoad)
     {
         cerr << "Wrong path to vocabulary. " << endl;
-        cerr << "Falied to open at: " << strVocFile << endl;
+        cerr << "Falied to open at: " << mParams.voc_file_path << endl;
         exit(-1);
     }
     cout << "Vocabulary loaded!" << endl << endl;
@@ -80,12 +75,13 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //Create Drawers. These are used by the Viewer
     mpFrameDrawer = new FrameDrawer(mpMap);
-    mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
+	MapDrawer::Params drawer_params;
+    mpMapDrawer = new MapDrawer(mpMap, drawer_params);
 
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
     mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
-                             mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
+                             mpMap, mpKeyFrameDatabase, mParams.tracking_params, mSensor);
 
     //Initialize the Local Mapping thread and launch
     mpLocalMapper = new LocalMapping(mpMap, mSensor==MONOCULAR);
@@ -98,7 +94,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     //Initialize the Viewer thread and launch
     if(bUseViewer)
     {
-        mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
+        mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,mParams.viewer_params);
         mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
     }
@@ -488,6 +484,40 @@ vector<cv::KeyPoint> System::GetTrackedKeyPointsUn()
 {
     unique_lock<mutex> lock(mMutexState);
     return mTrackedKeyPointsUn;
+}
+
+void readParamsFromOCVYAML(const std::string& fname, System::Params& params)
+{
+	cv::FileStorage fSettings(fname, cv::FileStorage::READ);
+	if (!fSettings.isOpened())
+	{
+		cerr << "Failed to open settings file at: " << fname << endl;
+		exit(-1);
+	}
+	params.tracking_params.fx = fSettings["Camera.fx"];
+	params.tracking_params.fy = fSettings["Camera.fy"];
+	params.tracking_params.cx = fSettings["Camera.cx"];
+	params.tracking_params.cy = fSettings["Camera.cy"];
+
+	params.tracking_params.k1 = fSettings["Camera.k1"];
+	params.tracking_params.k2 = fSettings["Camera.k2"];
+	params.tracking_params.p1 = fSettings["Camera.p1"];
+	params.tracking_params.p2 = fSettings["Camera.p2"];
+	params.tracking_params.k3 = fSettings["Camera.k3"];
+	params.tracking_params.bf = fSettings["Camera.bf"];
+	params.viewer_params.fps = fSettings["Camera.fps"];
+	params.tracking_params.fps = fSettings["Camera.fps"];
+	params.viewer_params.width = fSettings["Camera.width"];
+	params.viewer_params.height = fSettings["Camera.height"];
+	params.tracking_params.rgb = fSettings["Camera.RGB"];
+
+	params.tracking_params.num_features = fSettings["ORBextractor.nFeatures"];
+	params.tracking_params.num_levels = fSettings["ORBextractor.nLevels"];
+	params.tracking_params.init_thrs_fast = fSettings["ORBextractor.iniThFAST"];
+	params.tracking_params.min_thrs_fast = fSettings["ORBextractor.minThFAST"];
+	params.tracking_params.scale_factor = fSettings["ORBextractor.scaleFactor"];
+	params.tracking_params.th_depth = fSettings["ThDepth"];
+	params.tracking_params.depth_map_factor = fSettings["DepthMapFactor"];
 }
 
 } //namespace ORB_SLAM

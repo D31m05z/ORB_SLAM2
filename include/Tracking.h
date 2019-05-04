@@ -25,18 +25,14 @@
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
 
-#include"Viewer.h"
-#include"FrameDrawer.h"
-#include"Map.h"
-#include"LocalMapping.h"
-#include"LoopClosing.h"
-#include"Frame.h"
+#include "Viewer.h"
+#include "Map.h"
+#include "Frame.h"
 #include "ORBVocabulary.h"
-#include"KeyFrameDatabase.h"
-#include"ORBextractor.h"
+#include "KeyFrameDatabase.h"
+#include "ORBextractor.h"
 #include "Initializer.h"
 #include "MapDrawer.h"
-#include "System.h"
 
 #include <mutex>
 
@@ -52,10 +48,34 @@ class System;
 
 class Tracking
 {  
-
 public:
+
+	struct Params
+	{
+		float fx = -1.0f;
+		float fy = -1.0f;
+		float cx = -1.0f;
+		float cy = -1.0f;
+		float k1 = 0.0f;
+		float k2 = 0.0f;
+		float k3 = 0.0f;
+		float p1 = 0.0f;
+		float p2 = 0.0f;
+		float bf = 0.0f; // focal length times base distance
+		float th_depth = 35.0f; //Close/Far threshold. Baseline times.
+		float rgb = 0; // 0: BGR, 1: RGB
+		float depth_map_factor = 0.0f;
+		float fps = 30.0f;
+		int32_t num_features = 2000;
+		float scale_factor = 1.2f;
+		float num_levels = 9;
+		float init_thrs_fast = 20.0f;
+		float min_thrs_fast = 7.0f;
+
+
+	};
     Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Map* pMap,
-             KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor);
+             KeyFrameDatabase* pKFDB, const Params & p, const int sensor);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
     cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp);

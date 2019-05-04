@@ -34,7 +34,18 @@ namespace ORB_SLAM2
 class MapDrawer
 {
 public:
-    MapDrawer(Map* pMap, const string &strSettingPath);
+
+	struct Params
+	{
+		float KeyFrameSize = 0.6f;
+		float KeyFrameLineWidth = 2.f;
+		float GraphLineWidth = 1.f;
+		float PointSize = 2.f;
+		float CameraSize = 0.7f;
+		float CameraLineWidth = 3.f;
+	};
+
+    MapDrawer(Map* pMap, const Params & p);
 
     Map* mpMap;
 
