@@ -136,8 +136,6 @@ void Viewer::Run()
 
         cv::Mat im = mpFrameDrawer->DrawFrame();
         cv::imshow("ORB-SLAM2: Current Frame",im);
-        cv::waitKey(mT);
-
         if(menuReset)
         {
             menuShowGraph = true;
@@ -157,7 +155,7 @@ void Viewer::Run()
         {
             while(isStopped())
             {
-                usleep(3000);
+				std::this_thread::sleep_for(std::chrono::milliseconds(3));
             }
         }
 
