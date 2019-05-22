@@ -96,7 +96,6 @@ System::System(const Params & params, const eSensor sensor,
     if(bUseViewer)
     {
         mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,mParams.viewer_params);
-        mptViewer = new thread(&Viewer::Run, mpViewer);
         mpTracker->SetViewer(mpViewer);
     }
 
@@ -263,6 +262,11 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
 
     return Tcw;
+}
+
+void System::RunViewer()
+{
+    mpViewer->Run();
 }
 
 void System::ActivateLocalizationMode()
